@@ -150,4 +150,23 @@ flowchart TD
 
 ---
 
+## ディレクトリ構成
+
+```
+ai-ideas/
+├── meeting-summary-diffusion/
+│   ├── README.md         ← 概要・背景・技術案の候補・進捗
+│   ├── design.md         ← 実装方針（柔軟設計）＋構成図（Mermaid）
+│   └── src/              ← 実際のコード（PoCやモジュール単位）
+├── music-prompt-evolver/
+│   ├── README.md
+│   └── ...
+├── task-categorizer-gpt/
+│   ├── README.md
+│   └── ...
+├── ...
+```
+
+---
+
 Pull Request・Issue・アイディア提案歓迎です！
