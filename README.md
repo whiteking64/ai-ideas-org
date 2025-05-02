@@ -82,24 +82,71 @@ flowchart TD
 
 ## 最小構成コスト（月額目安）
 
-| 項目 | ツール | 月額 |
+| 目的 | ツール | 月額 |
 |------|--------|------|
-| Whisper 書き起こし | OpenWebUI / Colab | $0〜10 |
-| LLM | GPT-3.5 / 4o or Ollama + LLaMA | $20〜60 |
-| ベクトルDB | Qdrant / Chroma (ローカルDocker or Lightsail) | $0〜5 |
-| KPI処理 | Apps Script | $0 |
-| Slack通知Bot | Python + slack_sdk / Bolt.js | $0 |
-| Obsidian / Git | 手元運用で $0 |  |
-
-> **合計**：$20〜70/月程度。
+| ストレージ & API | Supabase (Free Tier) | $0 |
+| ベクタ検索/RAG | Supabase pgvector or Qdrant (Docker / Lightsail) | ≈ $5 |
+| LLM 呼び出し | GPT-3.5（定常）＋ GPT-4o（壁打ち） | 試算 $60 |
+| ETL/関数 | Supabase Edge Functions（Deno） | $0 |
+| KPI 取得 | Google Apps Script → Slack | $0 |
+| Bot 実装 | Bolt.js or Python slack_sdk | $0 |
+| ログ/監視 | Supabase Logs + Slack 通知 | $0 |
 
 ---
 
-## 特徴
-- OSS中心で誰でも再現可能
-- ObsidianやSlackと親和性が高い
-- モジュール分離しやすく、拡張・移植も簡単
-- 社内文脈に対応したLLM活用を徹底的に実現
+## データ機密度レベル
+
+| Level | 例 | 保存 | 埋め込み/RAG | 備考 |
+|-------|----|------|---------------|------|
+| L0 Public | ブログ草稿・OSS Issue | ✅ 全文 | ✅ | 社外公開してもよい情報 |
+| L1 Internal | Notion仕様書・社内スレッド | ✅ 全文 | ✅ | RLS で社外アクセス不可 |
+| L2 Sensitive | インタビュー文字起こし・ユーザー楽曲メタ | ✅ テキストのみ<br>⛔ 音声/WAV破棄 | ✅ | 列単位暗号化 + RLS |
+| L3 Private/Personal | 労務・財務・採用メモ等 | ✅ 全文 | ⛔ | RAG対象外、手動アクセスのみ |
+
+---
+
+## ユースケース別構成案
+
+### 1. KPI 通知（Quick Win）
+| Step | 実装 |
+|------|------|
+|① | Google Sheet に KPI 指標 (DAU / MRRなど) を毎晩貼る |
+|② | Apps Script で 7:00 JST に ±10 % 変動を検出 |
+|③ | Slack Bot で #metrics に自動投稿 |
+
+---
+
+### 2. インタビュー要約（Zapier or Edge Function）
+1. Otter で書き起こし → Zapier Trigger
+2. Zap → Supabase Edge Function (POST)
+3. GPT-3.5 / 4oで「痛み・要望・ハイライト」要約
+4. Supabase保存 + Slack DMへ送信
+
+---
+
+### 3. Daily Coach 生成
+- `/daily-coach` Slashコマンド → KPI & 業界ニュース読み込み → GPT-4o で「Reality Check 10問」
+- 回答から Bot が「今日のTODO 3件」を生成し pin
+
+---
+
+### 4. R&D オートスカウト
+- GitHub Actions (00:00 UTC)
+  - arXiv API → JSON収集
+  - GPT-3.5で要約＋スコアリング
+  - Supabaseにupsert
+  - Figma REST APIでカード表示
+
+---
+
+## モデル切替とUXポリシー
+
+| 使い分け | デフォルト | 手動切替例 |
+|-----------|------------|-------------|
+| 日次バッチ処理 | GPT-3.5 | 自動固定 |
+| 壁打ち / コーチ | GPT-4o | `/switch-model llama3` |
+| 社内RAG検索 | GPT-3.5 + pgvector | `/rag ask <query>` |
+| オフライン出先 | Ollama (LLaMA3) | `/rag local <query>` |
 
 ---
 
