@@ -1,5 +1,9 @@
 # ai-ideas-org
 
+AI活用を社内業務へノーコスト／ローコストで導入するための、再利用可能なアイディア集とシステム構成テンプレートです。開発・PM・マーケティングなど多様な職種で活用できるアイディアを整理し、最小構成で動作する構成例も併せて記載しています。
+
+---
+
 ## Use cases
 
 | ID   | アイディア | ひとこと（説明） | Dev | Marketing | PM |
@@ -21,3 +25,82 @@
 | G-15 | Supabase 初期構築雛形 | pgvectorやEdge Functionを含む汎用API構成を提供する | ✅ | | |
 | G-16 | Notion Context ブラウザ拡張機能 | 通常のGPT利用時に自動でNotionの文脈を補完して送信する | ✅ | ✅ | ✅ |
 | G-17 | 会議ログ＋Slack 整理 Bot | Slackや議事録から現状の論点や決定事項を要約し可視化する | ✅ | | ✅ |
+
+---
+
+## システム構成
+
+```mermaid
+flowchart TD
+    subgraph 入力
+        A1(Otter.ai / 音声ファイル)
+        A2(Slackメッセージ)
+        A3(GitHub PR / Issue)
+        A4(Jira チケット)
+        A5(Figma コメント)
+    end
+
+    subgraph ETL
+        B1(Whisper via OpenWebUI)
+        B2(Python Ingest Script)
+        B3(Google Apps Script)
+    end
+
+    subgraph ベクトルDB
+        C1(Qdrant OSS or Chroma)
+    end
+
+    subgraph モデル
+        D1(GPT-3.5 / GPT-4o)
+        D2(Ollama + LLaMA-3)
+    end
+
+    subgraph 出力
+        E1(Slack Bot)
+        E2(Obsidian Vault)
+        E3(Browser Extension)
+    end
+
+    A1 --> B1 --> B2
+    A2 --> B2
+    A3 --> B2
+    A4 --> B2
+    A5 --> B2
+    B3 --> B2
+    B2 --> C1
+    C1 --> D1
+    C1 --> D2
+    D1 --> E1
+    D1 --> E2
+    D1 --> E3
+    D2 --> E1
+    D2 --> E2
+    D2 --> E3
+```
+
+---
+
+## 最小構成コスト（月額目安）
+
+| 項目 | ツール | 月額 |
+|------|--------|------|
+| Whisper 書き起こし | OpenWebUI / Colab | $0〜10 |
+| LLM | GPT-3.5 / 4o or Ollama + LLaMA | $20〜60 |
+| ベクトルDB | Qdrant / Chroma (ローカルDocker or Lightsail) | $0〜5 |
+| KPI処理 | Apps Script | $0 |
+| Slack通知Bot | Python + slack_sdk / Bolt.js | $0 |
+| Obsidian / Git | 手元運用で $0 |  |
+
+> **合計**：$20〜70/月程度。
+
+---
+
+## 特徴
+- OSS中心で誰でも再現可能
+- ObsidianやSlackと親和性が高い
+- モジュール分離しやすく、拡張・移植も簡単
+- 社内文脈に対応したLLM活用を徹底的に実現
+
+---
+
+Pull Request・Issue・アイディア提案歓迎です！
